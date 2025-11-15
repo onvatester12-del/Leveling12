@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Leveling Tracker</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+```
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Icons as SVG components
+    const Trophy = ({ size = 24, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+            <path d="M4 22h16"></path>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+        </svg>
+    );
+
+    const Flame = ({ size = 24, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+        </svg>
+    );
+
+    const Dumbbell = ({ size = 24, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+            <path d="M6.5 6.5 17.5 17.5"></path>
+            <path d="M18 16v1a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-1"></path>
+            <path d="M6 8V7a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2v1"></path>
+            <path d="m9 9-1.5-1.5"></path>
+            <path d="m15 15 1.5 1.5"></path>
+            <path d="M17 21V3"></path>
+            <path d="M7 21V3"></path>
+        </svg>
+    );
+
+    const Briefcase = ({ size = 24, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+            <rect width="20" height="14" x="2" y="7" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+    );
+
+    const Shield = ({ size = 24, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+        </svg>
+    );
+
+    const TrendingUp = ({ size = 24, className = "" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+        </svg>
+    );
+
+    const SoloLevelingTracker = () => {
+        // Charger les données depuis localStorage
+        const loadData = () => {
+            try {
+                const saved = localStorage.getItem('soloLevelingData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    return data;
+                }
+            } catch (e) {
+                console.error('Erreur de chargement:', e);
+            }
+            return null;
+        };
+
+        const savedData = loadData();
+
+        const [currentXP, setCurrentXP] = useState(savedData?.currentXP || 0);
+        const [level, setLevel] = useState(savedData?.level || 1);
+        const [streak, setStreak] = useState(savedData?.streak || 0);
+        const [workoutCount, setWorkoutCount] = useState(savedData?.workoutCount || { pompes: 0, tractions: 0 });
+        const [dailyTaskDone, setDailyTaskDone] = useState(savedData?.dailyTaskDone || false);
+        const [lastTaskDate, setLastTaskDate] = useState(savedData?.lastTaskDate || new Date().toDateString());
+        const [xpPenalty, setXpPenalty] = useState(savedData?.xpPenalty || 0);
+        const [missedDays, setMissedDays] = useState(savedData?.missedDays || 0);
+        const [activities, setActivities] = useState(savedData?.activities || []);
+
+        // Sauvegarder les données dans localStorage
+        useEffect(() => {
+            const dataToSave = {
+                currentXP,
+                level,
+                streak,
+                workoutCount,
+                dailyTaskDone,
+                lastTaskDate,
+                xpPenalty,
+                missedDays,
+                activities: activities.slice(0, 20) // Garder seulement les 20 dernières
+            };
+            localStorage.setItem('soloLevelingData', JSON.stringify(dataToSave));
+        }, [currentXP, level, streak, workoutCount, dailyTaskDone, lastTaskDate, xpPenalty, missedDays, activities]);
+
+        const calculateXPForLevel = (lvl) => {
+            return Math.floor(1000 * Math.pow(1.2, lvl - 1));
+        };
+
+        const xpNeeded = calculateXPForLevel(level);
+        const progress = (currentXP / xpNeeded) * 100;
+
+        const addActivity = (text, xpGain, type = 'gain') => {
+            const now = new Date();
+            const time = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            setActivities(prev => [{
+                time,
+                text,
+                xp: xpGain,
+                type
+            }, ...prev].slice(0, 10));
+        };
+
+        const gainXP = (amount, activity) => {
+            const effectiveXP = Math.max(0, amount - xpPenalty);
+            const newXP = currentXP + effectiveXP;
+            
+            if (newXP >= xpNeeded) {
+                setLevel(level + 1);
+                setCurrentXP(newXP - xpNeeded);
+                addActivity(`🎉 NIVEAU ${level + 1} ATTEINT!`, 0, 'levelup');
+                alert(`🎉 LEVEL UP!\n\nVous êtes maintenant niveau ${level + 1}!`);
+            } else {
+                setCurrentXP(newXP);
+            }
+            
+            addActivity(activity, effectiveXP, 'gain');
+        };
+
+        const doExercise = (type) => {
+            const baseXP = type === 'pompes' ? 50 : 60;
+            const count = workoutCount[type];
+            const bonus = count * 10;
+            const totalXP = baseXP + bonus;
+            
+            setWorkoutCount(prev => ({ ...prev, [type]: prev[type] + 1 }));
+            gainXP(totalXP, `${type === 'pompes' ? '💪 10 Pompes' : '🏋️ 10 Tractions'} (+${bonus} bonus)`);
+            
+            alert(`✅ Exercice complété!\n\n${type === 'pompes' ? '💪 10 Pompes' : '🏋️ 10 Tractions'}\n💰 +${totalXP} XP (base: ${baseXP} + bonus: ${bonus})`);
+        };
+
+        const completeWorkTask = () => {
+            if (!dailyTaskDone) {
+                setDailyTaskDone(true);
+                setLastTaskDate(new Date().toDateString());
+                setXpPenalty(0);
+                setMissedDays(0);
+                gainXP(100, '📚 Travail 1h complété');
+                alert('✅ Activité effectuée!\n\n📚 Travail 1h complété\n💰 +100 XP\n🛡️ Pénalité supprimée');
+            }
+        };
+
+        useEffect(() => {
+            const checkDayChange = () => {
+                const today = new Date().toDateString();
+                if (lastTaskDate !== today) {
+                    if (!dailyTaskDone && lastTaskDate !== '') {
+                        const newMissedDays = missedDays + 1;
+                        const newPenalty = Math.min(newMissedDays * 10, 50);
+                        setMissedDays(newMissedDays);
+                        setXpPenalty(newPenalty);
+                        addActivity(`⚠️ Jour manqué! Pénalité: -${newPenalty} XP`, 0, 'penalty');
+                    }
+                    setDailyTaskDone(false);
+                    setLastTaskDate(today);
+                }
+            };
+
+            checkDayChange();
+            const interval = setInterval(checkDayChange, 60000);
+            return () => clearInterval(interval);
+        }, [lastTaskDate, dailyTaskDone, missedDays]);
+
+        const incrementStreak = () => {
+            setStreak(streak + 1);
+            gainXP(20 + streak * 5, `🔥 Streak jour ${streak + 1}`);
+            alert(`🔥 Streak!\n\nJour ${streak + 1} réussi\n💰 +${20 + streak * 5} XP`);
+        };
+
+        const resetStreak = () => {
+            if (confirm('⚠️ Êtes-vous sûr de vouloir réinitialiser votre streak?')) {
+                addActivity('💔 Streak réinitialisé', 0, 'penalty');
+                setStreak(0);
+            }
+        };
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 md:p-6">
+                <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
+                    
+                    <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-4 md:p-6 shadow-2xl">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2 md:gap-3">
+                                    <Trophy size={32} className="text-yellow-300" />
+                                    Niveau {level}
+                                </h1>
+                                <p className="text-purple-200 mt-1 text-sm md:text-base">Joueur Solo</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-2xl md:text-3xl font-bold text-yellow-300">{currentXP}</div>
+                                <div className="text-xs md:text-sm text-purple-200">/ {xpNeeded} XP</div>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-slate-800/50 rounded-full h-6 overflow-hidden">
+                            <div 
+                                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-full transition-all duration-500 flex items-center justify-center text-xs font-bold"
+                                style={{ width: `${Math.min(progress, 100)}%` }}
+                            >
+                                {progress > 10 && `${Math.floor(progress)}%`}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                        
+                        <div className="bg-slate-800/50 backdrop-blur rounded-lg p-4 md:p-6 shadow-xl border border-purple-500/30">
+                            <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2">
+                                <Dumbbell className="text-red-400" />
+                                Entraînement
+                            </h2>
+                            
+                            <div className="space-y-3 md:space-y-4">
+                                <button 
+                                    onClick={() => doExercise('pompes')}
+                                    className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 p-3 md:p-4 rounded-lg font-bold transition-all transform hover:scale-105 text-sm md:text-base"
+                                >
+                                    💪 10 Pompes
+                                    <div className="text-xs md:text-sm mt-1">
+                                        {workoutCount.pompes > 0 && `Répétition: ${workoutCount.pompes} (+${workoutCount.pompes * 10} XP bonus)`}
+                                    </div>
+                                </button>
+                                
+                                <button 
+                                    onClick={() => doExercise('tractions')}
+                                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 p-3 md:p-4 rounded-lg font-bold transition-all transform hover:scale-105 text-sm md:text-base"
+                                >
+                                    🏋️ 10 Tractions
+                                    <div className="text-xs md:text-sm mt-1">
+                                        {workoutCount.tractions > 0 && `Répétition: ${workoutCount.tractions} (+${workoutCount.tractions * 10} XP bonus)`}
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur rounded-lg p-4 md:p-6 shadow-xl border border-purple-500/30">
+                            <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2">
+                                <Briefcase className="text-green-400" />
+                                Tâches Quotidiennes
+                            </h2>
+                            
+                            <div className="space-y-3 md:space-y-4">
+                                <button 
+                                    onClick={completeWorkTask}
+                                    disabled={dailyTaskDone}
+                                    className={`w-full p-3 md:p-4 rounded-lg font-bold transition-all text-sm md:text-base ${
+                                        dailyTaskDone 
+                                            ? 'bg-green-600/50 cursor-not-allowed' 
+                                            : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 transform hover:scale-105'
+                                    }`}
+                                >
+                                    📚 Travailler 1h
+                                    <div className="text-xs md:text-sm mt-1">
+                                        {dailyTaskDone ? '✅ Complété aujourd\'hui' : '⏳ À faire aujourd\'hui'}
+                                    </div>
+                                </button>
+
+                                {xpPenalty > 0 && (
+                                    <div className="bg-red-900/30 border border-red-500 rounded-lg p-3 text-xs md:text-sm">
+                                        <Shield className="inline mr-2" size={16} />
+                                        Malus actif: -{xpPenalty} XP sur tous les gains ({missedDays} jour{missedDays > 1 ? 's' : ''} manqué{missedDays > 1 ? 's' : ''})
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur rounded-lg p-4 md:p-6 shadow-xl border border-purple-500/30 md:col-span-2">
+                            <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2">
+                                <Flame className="text-orange-400" />
+                                Streak d'Abstinence
+                            </h2>
+                            
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div className="flex-1 text-center md:text-left">
+                                    <div className="text-4xl md:text-5xl font-bold text-orange-400 mb-2">
+                                        {streak} jours
+                                    </div>
+                                    <div className="text-xs md:text-sm text-slate-300">
+                                        Prochain bonus: +{20 + streak * 5} XP
+                                    </div>
+                                </div>
+                                
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={incrementStreak}
+                                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold transition-all transform hover:scale-105 text-sm md:text-base"
+                                    >
+                                        ➕ Jour réussi
+                                    </button>
+                                    <button 
+                                        onClick={resetStreak}
+                                        className="bg-slate-700 hover:bg-slate-600 px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold transition-all text-sm md:text-base"
+                                    >
+                                        🔄 Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-800/50 backdrop-blur rounded-lg p-4 md:p-6 shadow-xl border border-purple-500/30 md:col-span-2">
+                            <h2 className="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2">
+                                <TrendingUp className="text-purple-400" />
+                                Journal d'Activités
+                            </h2>
+                            
+                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {activities.length === 0 ? (
+                                    <div className="text-slate-400 text-center py-4 text-sm md:text-base">
+                                        Aucune activité pour le moment
+                                    </div>
+                                ) : (
+                                    activities.map((activity, idx) => (
+                                        <div 
+                                            key={idx}
+                                            className={`p-3 rounded-lg text-sm md:text-base ${
+                                                activity.type === 'levelup' ? 'bg-yellow-600/20 border border-yellow-500' :
+                                                activity.type === 'penalty' ? 'bg-red-600/20 border border-red-500' :
+                                                'bg-slate-700/50'
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <span className="text-slate-400 text-xs md:text-sm">{activity.time}</span>
+                                                    <span className="ml-3 text-xs md:text-sm">{activity.text}</span>
+                                                </div>
+                                                {activity.xp !== 0 && (
+                                                    <span className={`font-bold text-sm md:text-base ${
+                                                        activity.type === 'penalty' ? 'text-red-400' : 'text-green-400'
+                                                    }`}>
+                                                        {activity.type === 'penalty' ? '' : '+'}{activity.xp} XP
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    ReactDOM.render(<SoloLevelingTracker />, document.getElementById('root'));
+</script>
+```
+
+</body>
+</html>
